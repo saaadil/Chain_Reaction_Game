@@ -6,6 +6,8 @@ let turnTimerInterval=null;
 let isPaused=false;
 const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
+const pauseButton=document.getElementById('pause-button');
+
 
 let gameState = Array.from({ length: rows }, () => 
     Array.from({ length: cols }, () => ({ orbs: 0, owner: null })));
@@ -21,32 +23,35 @@ for (let i=0; i<rows*cols; i++)
     newCell.dataset.row=r;
     newCell.dataset.col=c;
 
-newCell.addEventListener('click', function(event) {
-    let clickedRow = parseInt(event.target.dataset.row);
-    let clickedCol = parseInt(event.target.dataset.col);
-    let targetCell = gameState[clickedRow][clickedCol];
+    newCell.addEventListener('click', function(event) {
+        let clickedRow = parseInt(event.target.dataset.row);
+        let clickedCol = parseInt(event.target.dataset.col);
+        let targetCell = gameState[clickedRow][clickedCol];
 
-    if (targetCell.owner !== null && targetCell.owner !== currentPlayer) {
-        return;
-    }
+        if (isPaused){
+            return;
+        }
+        if (targetCell.owner !== null && targetCell.owner !== currentPlayer) {
+            return;
+        }
 
-    targetCell.orbs += 1;
-    targetCell.owner = currentPlayer;
+        targetCell.orbs += 1;
+        targetCell.owner = currentPlayer;
 
-    if (targetCell.orbs >= getCriticalMass(clickedRow, clickedCol)) {
-        explode(clickedRow, clickedCol);
-    }
+        if (targetCell.orbs >= getCriticalMass(clickedRow, clickedCol)) {
+            explode(clickedRow, clickedCol);
+        }
 
-    currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
+        currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
 
-    updateBoardUI();
+        updateBoardUI();
 
-    turnCount++;
+        turnCount++;
 
-    checkWinCondition(); 
+        checkWinCondition(); 
 
-    startTurnTimer();
-});
+        startTurnTimer();
+    });
 
     boardContainer.appendChild(newCell);
 }
@@ -160,3 +165,13 @@ function startTurnTimer()
         }
     },1000);
 }
+
+pauseButton.addEventListener('click', function(){
+    isPaused=!isPaused;
+    if (isPaused){
+        pauseButton.innerText='Resume';
+    } 
+    else{
+        pauseButton.innerText='Pause';
+    }    
+});
