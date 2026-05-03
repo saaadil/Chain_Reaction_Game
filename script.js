@@ -46,6 +46,8 @@ for (let i=0; i<rows*cols; i++)
 
         currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
 
+        updateTurnUI();
+
         updateBoardUI();
 
         turnCount++;
@@ -168,6 +170,7 @@ function startTurnTimer()
                 clearInterval(turnTimerInterval);
                 alert(currentPlayer+" ran out of time! Turn skipped.");
                 currentPlayer=(currentPlayer==='Red') ? 'Blue':'Red';
+                updateTurnUI();
                 startTurnTimer();
             }
         }
@@ -200,4 +203,19 @@ function startMasterClock()
             }
         }
     },1000);
+}
+
+function updateTurnUI()
+{
+    let indicator=document.getElementById('turn-indicator');
+    indicator.innerText=currentPlayer+"'s turn"
+    indicator.classList.remove('red-text');
+    indicator.classList.remove('blue-text');
+    
+    if (currentPlayer === 'Red') {
+        indicator.classList.add('red-text');
+    }
+    else {
+        indicator.classList.add('blue-text');
+    }
 }

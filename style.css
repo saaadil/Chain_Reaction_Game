@@ -42,3 +42,21 @@ body {
     background-color: #4c88ff;
     box-shadow: 0 0 8px #4c88ff;
 }
+#turn-indicator {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 20px;
+    transition: color 0.3s ease;
+}
+
+.red-text {
+    color: #ff4c4c;
+    text-shadow: 0 0 10px #ff4c4c;
+}
+
+.blue-text {
+    color: #4c88ff;
+    text-shadow: 0 0 10px #4c88ff;
+}
