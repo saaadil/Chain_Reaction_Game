@@ -168,9 +168,10 @@ function startTurnTimer()
           
             if (turnTime<=0){
                 clearInterval(turnTimerInterval);
-                alert(currentPlayer+" ran out of time! Turn skipped.");
-                currentPlayer=(currentPlayer==='Red') ? 'Blue':'Red';
+                let failingPlayer = currentPlayer; 
+                currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
                 updateTurnUI();
+                alert(failingPlayer + " ran out of time! Turn skipped.");
                 startTurnTimer();
             }
         }
@@ -219,3 +220,9 @@ function updateTurnUI()
         indicator.classList.add('blue-text');
     }
 }
+
+updateTurnUI();
+
+startMasterClock();
+
+startTurnTimer();
