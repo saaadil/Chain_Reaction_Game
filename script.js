@@ -1,6 +1,9 @@
 const rows=12;
 const cols=6;
 let turnCount=0;
+let turnTime=15;
+let turnTimerInterval=null;
+let isPaused=false;
 const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
 
@@ -41,6 +44,8 @@ newCell.addEventListener('click', function(event) {
     turnCount++;
 
     checkWinCondition(); 
+
+    startTurnTimer();
 });
 
     boardContainer.appendChild(newCell);
@@ -133,4 +138,25 @@ function checkWinCondition()
     else if (blueCount>0 && redCount===0){
         alert("Blue Wins!");
     }
+}
+
+function startTurnTimer()
+{
+    clearInterval(turnTimerInterval);
+    turnTime=15;
+    document.getElementById('turn-time').innerText=turnTime;
+
+    turnTimerInterval=setInterval(() => {
+        if (!isPaused){
+            turnTime--;
+            document.getElementById('turn-time').innerText=turnTime;
+          
+            if (turnTime<=0){
+                clearInterval(turnTimerInterval);
+                alert(currentPlayer+" ran out of time! Turn skipped.");
+                currentPlayer=(currentPlayer==='Red') ? 'Blue':'Red';
+                startTurnTimer();
+            }
+        }
+    },1000);
 }
