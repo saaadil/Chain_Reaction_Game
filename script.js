@@ -1,5 +1,6 @@
 const rows=12;
 const cols=6;
+let turnCount=0;
 const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
 
@@ -17,22 +18,30 @@ for (let i=0; i<rows*cols; i++)
     newCell.dataset.row=r;
     newCell.dataset.col=c;
 
-    newCell.addEventListener('click',function(event){
-        let clickedRow=parseInt(event.target.dataset.row);
-        let clickedCol=parseInt(event.target.dataset.col);
-        let targetCell=gameState[clickedRow][clickedCol];
+newCell.addEventListener('click', function(event) {
+    let clickedRow = parseInt(event.target.dataset.row);
+    let clickedCol = parseInt(event.target.dataset.col);
+    let targetCell = gameState[clickedRow][clickedCol];
 
-        if (targetCell.owner!==null && targetCell.owner!==currentPlayer){
-            return;
-        }
-        targetCell.orbs+=1;
-        targetCell.owner=currentPlayer;
+    if (targetCell.owner !== null && targetCell.owner !== currentPlayer) {
+        return;
+    }
 
-        event.target.innerText=targetCell.orbs
-        event.target.style.color=targetCell.owner
+    targetCell.orbs += 1;
+    targetCell.owner = currentPlayer;
 
-        currentPlayer=(currentPlayer ==='Red') ? 'Blue' : 'Red';
-    })
+    if (targetCell.orbs >= getCriticalMass(clickedRow, clickedCol)) {
+        explode(clickedRow, clickedCol);
+    }
+
+    currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
+
+    updateBoardUI();
+
+    turnCount++;
+
+    checkWinCondition(); 
+});
 
     boardContainer.appendChild(newCell);
 }
@@ -71,8 +80,8 @@ function explode(r,c)
             gameState[nr][nc].orbs+=1;
             gameState[nr][nc].owner=currentPlayer;
 
-            if (gameState[nr][nc].orbs>=getCriticalMass(nr,nc)){
-                explode(nr,nc);
+            if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
+            explode(nr, nc);
             }
         }
     }
@@ -80,5 +89,48 @@ function explode(r,c)
 
 function updateBoardUI()
 {
-    
+    let cells=document.querySelectorAll('.cell');
+    for (let i=0; i<cells.length; i++){
+        let cellRow=parseInt(cells[i].dataset.row);
+        let cellCol=parseInt(cells[i].dataset.col);
+
+        if (gameState[cellRow][cellCol].orbs===0){
+            cells[i].innerText="";
+        } else{
+            cells[i].innerText=gameState[cellRow][cellCol].orbs;
+        }
+
+        if (gameState[cellRow][cellCol].owner===null){
+            cells[i].style.color="white";
+        } else{
+            cells[i].style.color=gameState[cellRow][cellCol].owner;
+        }
+    }
+}
+
+function checkWinCondition()
+{
+    if (turnCount<=1){
+        return;
+    }
+
+    let redCount=0;
+    let blueCount=0;
+
+    for (let r=0; r<rows; r++){
+        for (let c=0; c<cols; c++){
+            if (gameState[r][c].owner==='Red'){
+                redCount+=1;
+            }
+            else if (gameState[r][c].owner==='Blue'){
+                blueCount+=1;
+            }
+        }
+    }
+    if (redCount>0 && blueCount===0){
+        alert("Red Wins!");
+    }
+    else if (blueCount>0 && redCount===0){
+        alert("Blue Wins!");
+    }
 }
