@@ -3,7 +3,9 @@ const cols=6;
 let turnCount=0;
 let turnTime=15;
 let turnTimerInterval=null;
+let masterClockInterval=null;
 let isPaused=false;
+let totalTime=300;
 const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
 const pauseButton=document.getElementById('pause-button');
@@ -175,3 +177,21 @@ pauseButton.addEventListener('click', function(){
         pauseButton.innerText='Pause';
     }    
 });
+
+function startMasterClock()
+{
+    masterClockInterval=setInterval(() => {
+        if (!isPaused){
+            totalTime--;
+            document.getElementById('total-time').innerText=totalTime;
+
+            if (totalTime<=0){
+                clearInterval(masterClockInterval);
+                isPaused=true;
+                alert("Time is up!");
+
+                checkWinCondition();
+            }
+        }
+    },1000);
+}
