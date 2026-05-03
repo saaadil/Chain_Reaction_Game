@@ -105,17 +105,23 @@ function updateBoardUI()
     for (let i=0; i<cells.length; i++){
         let cellRow=parseInt(cells[i].dataset.row);
         let cellCol=parseInt(cells[i].dataset.col);
+        let currentCellState=gameState[cellRow][cellCol];
 
-        if (gameState[cellRow][cellCol].orbs===0){
-            cells[i].innerText="";
-        } else{
-            cells[i].innerText=gameState[cellRow][cellCol].orbs;
-        }
+        cells[i].innerHTML = ""; 
 
-        if (gameState[cellRow][cellCol].owner===null){
-            cells[i].style.color="white";
-        } else{
-            cells[i].style.color=gameState[cellRow][cellCol].owner;
+        for (let j=0; j<currentCellState.orbs; j++) {
+            
+            let newOrb=document.createElement('div');
+            
+            newOrb.classList.add('orb');
+            
+            if (currentCellState.owner === 'Red') {
+                newOrb.classList.add('red-orb');
+            } 
+            else if (currentCellState.owner === 'Blue') {
+                newOrb.classList.add('blue-orb');
+            }
+            cells[i].appendChild(newOrb);
         }
     }
 }

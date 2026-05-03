@@ -25,3 +25,20 @@ body {
     align-items: center;      
     cursor: pointer;           
 }
+.orb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 2px;
+}
+
+.red-orb {
+    background-color: #ff4c4c;
+    box-shadow: 0 0 8px #ff4c4c;
+}
+
+.blue-orb {
+    background-color: #4c88ff;
+    box-shadow: 0 0 8px #4c88ff;
+}
