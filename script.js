@@ -5,7 +5,9 @@ let turnTime=15;
 let turnTimerInterval=null;
 let masterClockInterval=null;
 let isPaused=false;
+let isAnimating=false;
 let totalTime=300;
+let explosionQueue=[];
 const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
 const pauseButton=document.getElementById('pause-button');
@@ -33,6 +35,9 @@ for (let i=0; i<rows*cols; i++)
         if (isPaused){
             return;
         }
+        if (isAnimating){
+            return;
+        }
         if (targetCell.owner !== null && targetCell.owner !== currentPlayer) {
             return;
         }
@@ -41,20 +46,20 @@ for (let i=0; i<rows*cols; i++)
         targetCell.owner = currentPlayer;
 
         if (targetCell.orbs >= getCriticalMass(clickedRow, clickedCol)) {
-            explode(clickedRow, clickedCol);
+            isAnimating = true;
+            explosionQueue.push({r:clickedRow, c:clickedCol});
+            processExplosionQueue();
+        }
+        else{
+            currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
+            updateTurnUI();
+            updateBoardUI();
+            turnCount++;
+            checkWinCondition(); 
+            startTurnTimer();
         }
 
-        currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
-
-        updateTurnUI();
-
-        updateBoardUI();
-
-        turnCount++;
-
-        checkWinCondition(); 
-
-        startTurnTimer();
+        
     });
 
     boardContainer.appendChild(newCell);
@@ -73,31 +78,6 @@ function getCriticalMass(r,c)
     else
     {
         return 4;
-    }
-}
-
-function explode(r,c)
-{
-    gameState[r][c].orbs-=getCriticalMass(r,c);
-
-    if (gameState[r][c].orbs===0){
-        gameState[r][c].owner=null;
-    }
-    
-    let neighbours=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
-
-    for (let i=0; i<neighbours.length; i++){
-        let nr=neighbours[i][0];
-        let nc=neighbours[i][1];
-        
-        if (nr>=0 && nr<rows && nc>=0 && nc<cols){
-            gameState[nr][nc].orbs+=1;
-            gameState[nr][nc].owner=currentPlayer;
-
-            if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
-            explode(nr, nc);
-            }
-        }
     }
 }
 
@@ -226,3 +206,50 @@ updateTurnUI();
 startMasterClock();
 
 startTurnTimer();
+
+function processExplosionQueue()
+{
+    if (explosionQueue.length===0){
+        isAnimating=false;
+
+        let previousPlayer=currentPlayer;
+        currentPlayer=(currentPlayer==='Red') ? 'Blue':'Red';
+
+        updateTurnUI();
+        turnCount++;
+        checkWinCondition(); 
+        startTurnTimer(); 
+        
+        return; 
+    }
+
+    let currentExplosion = explosionQueue.shift(); 
+    let r = currentExplosion.r;
+    let c = currentExplosion.c;
+
+    if (gameState[r][c].orbs >= getCriticalMass(r, c)) {
+        
+        gameState[r][c].orbs -= getCriticalMass(r, c);
+        if (gameState[r][c].orbs === 0) {
+            gameState[r][c].owner = null;
+        }
+
+        let neighbours = [[r-1, c], [r+1, c], [r, c-1], [r, c+1]];
+        for (let i = 0; i < neighbours.length; i++) {
+            let nr = neighbours[i][0];
+            let nc = neighbours[i][1];
+            
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                gameState[nr][nc].orbs += 1;
+                gameState[nr][nc].owner = currentPlayer;
+
+                if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
+                    explosionQueue.push({ r: nr, c: nc });
+                }
+            }
+        }
+    }
+    updateBoardUI();
+
+    setTimeout(processExplosionQueue, 250);
+}
