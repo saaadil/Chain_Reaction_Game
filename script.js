@@ -132,21 +132,21 @@ function checkWinCondition()
         }
     }
     if (redCount>0 && blueCount===0){
-        gameOver('Blue');
+        gameOver('Red');
     }
     else if (blueCount>0 && redCount===0){
-        gameOver('Red');
+        gameOver('Blue');
     }
 }
 
 function startTurnTimer()
 {
     clearInterval(turnTimerInterval);
-    turnTime=15;
+    let turnTime=15;
     document.getElementById('turn-time').innerText=turnTime;
 
     turnTimerInterval=setInterval(() => {
-        if (!isPaused){
+        if (!isPaused && !isOver && !isAnimating){
             turnTime--;
             document.getElementById('turn-time').innerText=turnTime;
           
@@ -269,4 +269,6 @@ function gameOver(winner)
         document.getElementById('turn-indicator').innerText="Red Wins!";
         document.getElementById('turn-indicator').className="red-text";
     }
+    clearInterval(turnTimerInterval);
+    clearInterval(masterClockInterval);
 }
