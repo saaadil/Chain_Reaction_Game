@@ -4,6 +4,7 @@ let turnCount=0;
 let turnTime=15;
 let turnTimerInterval=null;
 let masterClockInterval=null;
+let isOver=false;
 let isPaused=false;
 let isAnimating=false;
 let totalTime=300;
@@ -32,6 +33,9 @@ for (let i=0; i<rows*cols; i++)
         let clickedCol = parseInt(event.target.dataset.col);
         let targetCell = gameState[clickedRow][clickedCol];
 
+        if (isOver){
+            return;
+        }
         if (isPaused){
             return;
         }
@@ -128,10 +132,10 @@ function checkWinCondition()
         }
     }
     if (redCount>0 && blueCount===0){
-        alert("Red Wins!");
+        gameOver('Blue');
     }
     else if (blueCount>0 && redCount===0){
-        alert("Blue Wins!");
+        gameOver('Red');
     }
 }
 
@@ -252,4 +256,17 @@ function processExplosionQueue()
     updateBoardUI();
 
     setTimeout(processExplosionQueue, 250);
+}
+
+function gameOver(winner)
+{
+    isOver=true;
+    if (winner==='Blue'){
+        document.getElementById('turn-indicator').innerText="Blue Wins!";
+        document.getElementById('turn-indicator').className="blue-text";
+    }
+    else{
+        document.getElementById('turn-indicator').innerText="Red Wins!";
+        document.getElementById('turn-indicator').className="red-text";
+    }
 }
