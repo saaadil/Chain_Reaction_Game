@@ -57,14 +57,28 @@ for (let i=0; i<rows*cols; i++)
         if (isAnimating){
             return;
         }
-        if (targetCell.owner !== null && targetCell.owner !== currentPlayer) {
+        if (targetCell.owner!==null && targetCell.owner!==currentPlayer) {
             return;
         }
 
+        let pointsEarned=0;
+
         if (turnCount < 2) {
-            targetCell.orbs = getCriticalMass(clickedRow, clickedCol) - 1;
-        } else {
-            targetCell.orbs += 1;
+            let grantedOrbs=getCriticalMass(clickedRow, clickedCol)-1;
+            targetCell.orbs=grantedOrbs;
+            pointsEarned=grantedOrbs; 
+        } 
+        else {
+            targetCell.orbs+=1;
+            pointsEarned=1; 
+        }
+        if (currentPlayer==='Red') {
+            redScore+=pointsEarned;
+            document.getElementById('red-score').innerText=redScore;
+        } 
+        else {
+            blueScore+=pointsEarned;
+            document.getElementById('blue-score').innerText=blueScore;
         }
 
         targetCell.owner=currentPlayer;
@@ -81,9 +95,7 @@ for (let i=0; i<rows*cols; i++)
             turnCount++;
             checkWinCondition(); 
             startTurnTimer();
-        }
-
-        
+        }   
     });
 
     boardContainer.appendChild(newCell);
@@ -197,15 +209,29 @@ function startMasterClock()
     masterClockInterval=setInterval(() => {
         if (!isPaused){
             totalTime--;
-            document.getElementById('total-time').innerText=totalTime;
-
-            if (totalTime<=0){
+            if (totalTime <= 0) {
+                isOver = true;
                 clearInterval(masterClockInterval);
-                isPaused=true;
-                alert("Time is up!");
+                clearInterval(turnTimerInterval);
 
-                checkWinCondition();
+                let uiIndicator = document.getElementById('turn-indicator');
+                
+                if (redScore > blueScore) {
+                    uiIndicator.className = "red-text";
+                    uiIndicator.innerHTML = "TIME UP: RED WINS ON POINTS!";
+                } else if (blueScore > redScore) {
+                    uiIndicator.className = "blue-text";
+                    uiIndicator.innerHTML = "TIME UP: BLUE WINS ON POINTS!";
+                } else {
+                    // Handle the draw
+                    uiIndicator.className = "";
+                    uiIndicator.style.color = "white"; 
+                    uiIndicator.innerHTML = "TIME UP: DRAW!";
+                }
+                
+                return; 
             }
+            document.getElementById('total-time').innerText=totalTime;
         }
     },1000);
 }
@@ -265,16 +291,22 @@ function processExplosionQueue()
             
             if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
                 let previousOwner = gameState[nr][nc].owner;
+                let previousOrbs = gameState[nr][nc].orbs; 
+                
+                let pointsEarned = 1;
 
                 if (previousOwner !== null && previousOwner !== currentPlayer) {
-                    if (currentPlayer === 'Red') {
-                        redScore += gameState[nr][nc].orbs;
-                        document.getElementById('red-score').innerText = redScore;
-                    } else {
-                        blueScore += gameState[nr][nc].orbs;
-                        document.getElementById('blue-score').innerText = blueScore;
-                    }
+                    pointsEarned += previousOrbs;
                 }
+
+                if (currentPlayer === 'Red') {
+                    redScore += pointsEarned;
+                    document.getElementById('red-score').innerText = redScore;
+                } else {
+                    blueScore += pointsEarned;
+                    document.getElementById('blue-score').innerText = blueScore;
+                }
+
                 gameState[nr][nc].orbs += 1;
                 gameState[nr][nc].owner = currentPlayer;
 
