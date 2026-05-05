@@ -8,6 +8,8 @@ const config={
 
 const rows=config.ROWS;
 const cols=config.COLS;
+let redScore=0;
+let blueScore=0;
 let turnCount=0;
 let turnTime=config.TURN_TIME;
 let turnTimerInterval=null;
@@ -59,8 +61,13 @@ for (let i=0; i<rows*cols; i++)
             return;
         }
 
-        targetCell.orbs += 1;
-        targetCell.owner = currentPlayer;
+        if (turnCount < 2) {
+            targetCell.orbs = getCriticalMass(clickedRow, clickedCol) - 1;
+        } else {
+            targetCell.orbs += 1;
+        }
+
+        targetCell.owner=currentPlayer;
 
         if (targetCell.orbs >= getCriticalMass(clickedRow, clickedCol)) {
             isAnimating = true;
@@ -84,7 +91,7 @@ for (let i=0; i<rows*cols; i++)
 
 function getCriticalMass(r,c)
 {
-    if ((r === 0 && c === 0) || (r === 0 && c === cols - 1) || (r === rows - 1 && c === 0) || (r === rows - 1 && c === cols - 1))
+    if ((r===0 && c===0) || (r===0 && c===cols-1) || (r===rows-1 && c===0) || (r===rows-1 && c===cols-1))
     {
         return 2;
     }
@@ -257,6 +264,17 @@ function processExplosionQueue()
             let nc = neighbours[i][1];
             
             if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                let previousOwner = gameState[nr][nc].owner;
+
+                if (previousOwner !== null && previousOwner !== currentPlayer) {
+                    if (currentPlayer === 'Red') {
+                        redScore += gameState[nr][nc].orbs;
+                        document.getElementById('red-score').innerText = redScore;
+                    } else {
+                        blueScore += gameState[nr][nc].orbs;
+                        document.getElementById('blue-score').innerText = blueScore;
+                    }
+                }
                 gameState[nr][nc].orbs += 1;
                 gameState[nr][nc].owner = currentPlayer;
 
@@ -314,6 +332,11 @@ function resetGame()
     document.getElementById('total-time').innerText=totalTime;
     startMasterClock();
     startTurnTimer();
+    
+    redScore = 0;
+    blueScore = 0;
+    document.getElementById('red-score').innerText = redScore;
+    document.getElementById('blue-score').innerText = blueScore;
 }
 
 document.getElementById('restart-button').addEventListener('click', resetGame);

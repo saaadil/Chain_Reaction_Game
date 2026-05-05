@@ -67,3 +67,15 @@ body {
     color: #4c88ff;
     text-shadow: 0 0 10px #4c88ff;
 }
+
+#scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+.red-score-box { color: #ff4c4c; }
+.blue-score-box { color: #4c88ff; }
