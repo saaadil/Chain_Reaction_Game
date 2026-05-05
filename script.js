@@ -62,15 +62,17 @@ for (let i=0; i<rows*cols; i++)
         }
 
         let pointsEarned=0;
+        let wasEmpty = (targetCell.owner === null);
 
         if (turnCount < 2) {
-            let grantedOrbs=getCriticalMass(clickedRow, clickedCol)-1;
-            targetCell.orbs=grantedOrbs;
-            pointsEarned=grantedOrbs; 
+            let grantedOrbs = getCriticalMass(clickedRow, clickedCol) - 1;
+            targetCell.orbs = grantedOrbs;
+            pointsEarned = grantedOrbs; 
         } 
         else {
-            targetCell.orbs+=1;
-            pointsEarned=1; 
+            targetCell.orbs += 1;
+            // You always get 1 point for initiating your turn and adding mass
+            pointsEarned = 1; 
         }
         if (currentPlayer==='Red') {
             redScore+=pointsEarned;
@@ -259,11 +261,11 @@ startTurnTimer();
 
 function processExplosionQueue()
 {
-    if (explosionQueue.length===0){
-        isAnimating=false;
+    if (explosionQueue.length === 0){
+        isAnimating = false;
 
-        let previousPlayer=currentPlayer;
-        currentPlayer=(currentPlayer==='Red') ? 'Blue':'Red';
+        let previousPlayer = currentPlayer;
+        currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
 
         updateTurnUI();
         turnCount++;
@@ -279,39 +281,51 @@ function processExplosionQueue()
 
     if (gameState[r][c].orbs >= getCriticalMass(r, c)) {
         
+        // 1. Subtract the mass. 
+        // We absolutely DO NOT set owner to null here to prevent Crater Glitches.
         gameState[r][c].orbs -= getCriticalMass(r, c);
-        if (gameState[r][c].orbs === 0) {
-            gameState[r][c].owner = null;
-        }
 
         let neighbours = [[r-1, c], [r+1, c], [r, c-1], [r, c+1]];
         for (let i = 0; i < neighbours.length; i++) {
             let nr = neighbours[i][0];
             let nc = neighbours[i][1];
             
+            // Grid Boundary Check
             if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
                 let previousOwner = gameState[nr][nc].owner;
                 let previousOrbs = gameState[nr][nc].orbs; 
-                
-                let pointsEarned = 1;
+                let pointsEarned = 0;
 
-                if (previousOwner !== null && previousOwner !== currentPlayer) {
-                    pointsEarned += previousOrbs;
+                if (previousOwner === null) {
+                    pointsEarned = 1; // Claiming true empty space
+                } 
+                else if (previousOwner !== currentPlayer) {
+                    // ⚠️ FIX: You only get points for the orbs you steal
+                    pointsEarned = previousOrbs; 
                 }
-
+                else {
+                    pointsEarned = 0; // Friendly Fire / Craters
+                }
+                // APPLY POINTS
                 if (currentPlayer === 'Red') {
                     redScore += pointsEarned;
                     document.getElementById('red-score').innerText = redScore;
-                } else {
+                } 
+                else {
                     blueScore += pointsEarned;
                     document.getElementById('blue-score').innerText = blueScore;
                 }
-
+                
+                // OVERWRITE STATE
                 gameState[nr][nc].orbs += 1;
                 gameState[nr][nc].owner = currentPlayer;
 
+                // THE QUEUE SCANNER (Prevents Phantom Detonations)
                 if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
-                    explosionQueue.push({ r: nr, c: nc });
+                    let alreadyInQueue = explosionQueue.some(e => e.r === nr && e.c === nc);
+                    if (!alreadyInQueue) {
+                        explosionQueue.push({r: nr, c: nc});
+                    }
                 }
             }
         }
