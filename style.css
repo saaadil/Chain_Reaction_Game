@@ -5,32 +5,39 @@ body {
     height: 100vh;
     background-color: #1a1a1a; 
     margin: 0;
+    flex-direction: column;
+    gap: 20px;
 }
-#board-container {
+#board-container 
+ {
+    width: 90vmin;
+    height: 90vmin;
+    max-width: 600px;
+    max-height: 600px;
+    margin: 0 auto; 
     display: grid;
-    grid-template-columns: repeat(6, 1fr); 
-    width: 360px; 
-    gap: 2px; 
-    background-color: #444; 
-    border: 2px solid #555; 
+    border: 2px solid white; 
 }
+
 .cell {
     width: 100%;
-    aspect-ratio: 1 / 1; 
-    background-color: black;
-    border: 1px solid #222;
-
-    display: flex;               
-    justify-content: center;    
-    align-items: center;      
-    cursor: pointer;           
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center; 
+    flex-wrap: wrap; 
+    border: 1px solid #444; 
+    box-sizing: border-box;
+    gap: 2px; 
 }
+
 .orb {
-    width: 15px;
-    height: 15px;
+    width: 40%;
+    height: 40%;
     border-radius: 50%;
-    display: inline-block;
-    margin: 2px;
+    transition: all 0.2s ease-in-out;
+    pointer-events: none; 
 }
 
 .red-orb {

@@ -1,18 +1,29 @@
-const rows=12;
-const cols=6;
+const config={
+    MAX_GAME_TIME: 300,
+    TURN_TIME: 15,
+    ANIM_DELAY: 250,
+    ROWS: 12,
+    COLS: 6
+};
+
+const rows=config.ROWS;
+const cols=config.COLS;
 let turnCount=0;
-let turnTime=15;
+let turnTime=config.TURN_TIME;
 let turnTimerInterval=null;
 let masterClockInterval=null;
 let isOver=false;
 let isPaused=false;
 let isAnimating=false;
-let totalTime=300;
+let totalTime=config.MAX_GAME_TIME;
 let explosionQueue=[];
-const boardContainer=document.getElementById('board-container');
 let currentPlayer='Red';
+
+const boardContainer=document.getElementById('board-container');
 const pauseButton=document.getElementById('pause-button');
 
+boardContainer.style.gridTemplateColumns = `repeat(${config.COLS}, 1fr)`;
+boardContainer.style.gridTemplateRows = `repeat(${config.ROWS}, 1fr)`;
 
 let gameState = Array.from({ length: rows }, () => 
     Array.from({ length: cols }, () => ({ orbs: 0, owner: null })));
@@ -31,8 +42,8 @@ for (let i=0; i<rows*cols; i++)
     newCell.id = "cell-" + r + "-" + c;
 
     newCell.addEventListener('click', function(event) {
-        let clickedRow = parseInt(event.target.dataset.row);
-        let clickedCol = parseInt(event.target.dataset.col);
+        let clickedRow = parseInt(event.currentTarget.dataset.row);
+        let clickedCol = parseInt(event.currentTarget.dataset.col);
         let targetCell = gameState[clickedRow][clickedCol];
 
         if (isOver){
@@ -144,7 +155,7 @@ function checkWinCondition()
 function startTurnTimer()
 {
     clearInterval(turnTimerInterval);
-    let turnTime=15;
+    let turnTime=config.TURN_TIME;
     document.getElementById('turn-time').innerText=turnTime;
 
     turnTimerInterval=setInterval(() => {
@@ -257,7 +268,7 @@ function processExplosionQueue()
     }
     updateBoardUI();
 
-    setTimeout(processExplosionQueue, 250);
+    setTimeout(processExplosionQueue, config.ANIM_DELAY);
 }
 
 function gameOver(winner)
@@ -277,6 +288,10 @@ function gameOver(winner)
 
 function resetGame()
 {
+    if (isAnimating){
+        return;
+    }
+
     for (let r1=0; r1<rows; r1++){
         for (let c1=0; c1<cols; c1++){
             gameState[r1][c1].orbs=0;
@@ -291,9 +306,14 @@ function resetGame()
     currentPlayer='Red';
     turnCount=0;
 
-    document.getElementById('turn-indicator').className="";
+    document.getElementById('turn-indicator').className="red-text";
     document.getElementById('turn-indicator').innerHTML="Red's turn";
 
+    clearInterval(masterClockInterval)
+    totalTime=config.MAX_GAME_TIME;
+    document.getElementById('total-time').innerText=totalTime;
     startMasterClock();
     startTurnTimer();
 }
+
+document.getElementById('restart-button').addEventListener('click', resetGame);
