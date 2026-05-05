@@ -6,6 +6,12 @@ const config={
     COLS: 6
 };
 
+const sound = {
+    click: new Audio('click.mp3'),   
+    pop: new Audio('pop.mp3'),       
+    error: new Audio('error.mp3')    
+};
+
 const rows=config.ROWS;
 const cols=config.COLS;
 let redScore=0;
@@ -48,18 +54,14 @@ for (let i=0; i<rows*cols; i++)
         let clickedCol = parseInt(event.currentTarget.dataset.col);
         let targetCell = gameState[clickedRow][clickedCol];
 
-        if (isOver){
-            return;
-        }
-        if (isPaused){
-            return;
-        }
-        if (isAnimating){
+        if (isOver || isPaused || isAnimating) {
             return;
         }
         if (targetCell.owner!==null && targetCell.owner!==currentPlayer) {
+            playSound(sound.error);
             return;
         }
+        playSound(sound.click);
 
         let pointsEarned=0;
         let wasEmpty = (targetCell.owner === null);
@@ -71,7 +73,6 @@ for (let i=0; i<rows*cols; i++)
         } 
         else {
             targetCell.orbs += 1;
-            // You always get 1 point for initiating your turn and adding mass
             pointsEarned = 1; 
         }
         if (currentPlayer==='Red') {
@@ -281,32 +282,30 @@ function processExplosionQueue()
 
     if (gameState[r][c].orbs >= getCriticalMass(r, c)) {
         
-        // 1. Subtract the mass. 
-        // We absolutely DO NOT set owner to null here to prevent Crater Glitches.
         gameState[r][c].orbs -= getCriticalMass(r, c);
+
+        playSound(sound.pop);
 
         let neighbours = [[r-1, c], [r+1, c], [r, c-1], [r, c+1]];
         for (let i = 0; i < neighbours.length; i++) {
             let nr = neighbours[i][0];
             let nc = neighbours[i][1];
             
-            // Grid Boundary Check
             if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
                 let previousOwner = gameState[nr][nc].owner;
                 let previousOrbs = gameState[nr][nc].orbs; 
                 let pointsEarned = 0;
 
                 if (previousOwner === null) {
-                    pointsEarned = 1; // Claiming true empty space
+                    pointsEarned = 1;
                 } 
                 else if (previousOwner !== currentPlayer) {
-                    // ⚠️ FIX: You only get points for the orbs you steal
                     pointsEarned = previousOrbs; 
                 }
                 else {
-                    pointsEarned = 0; // Friendly Fire / Craters
+                    pointsEarned = 0; 
                 }
-                // APPLY POINTS
+
                 if (currentPlayer === 'Red') {
                     redScore += pointsEarned;
                     document.getElementById('red-score').innerText = redScore;
@@ -316,11 +315,9 @@ function processExplosionQueue()
                     document.getElementById('blue-score').innerText = blueScore;
                 }
                 
-                // OVERWRITE STATE
                 gameState[nr][nc].orbs += 1;
                 gameState[nr][nc].owner = currentPlayer;
 
-                // THE QUEUE SCANNER (Prevents Phantom Detonations)
                 if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
                     let alreadyInQueue = explosionQueue.some(e => e.r === nr && e.c === nc);
                     if (!alreadyInQueue) {
@@ -383,6 +380,14 @@ function resetGame()
     blueScore = 0;
     document.getElementById('red-score').innerText = redScore;
     document.getElementById('blue-score').innerText = blueScore;
+}
+
+function playSound(audioNode) {
+    if (!audioNode) return;
+    let clone = audioNode.cloneNode(true);
+    clone.volume = 0.6; 
+    clone.play().catch(e => {
+    });
 }
 
 document.getElementById('restart-button').addEventListener('click', resetGame);
