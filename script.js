@@ -17,7 +17,6 @@ const cols=config.COLS;
 let redScore=0;
 let blueScore=0;
 let turnCount=0;
-let turnTime=config.TURN_TIME;
 let turnTimerInterval=null;
 let masterClockInterval=null;
 let isOver=false;
@@ -61,27 +60,14 @@ for (let i=0; i<rows*cols; i++)
             playSound(sound.error);
             return;
         }
+
         playSound(sound.click);
-
-        let pointsEarned=0;
-        let wasEmpty = (targetCell.owner === null);
-
         if (turnCount < 2) {
             let grantedOrbs = getCriticalMass(clickedRow, clickedCol) - 1;
             targetCell.orbs = grantedOrbs;
-            pointsEarned = grantedOrbs; 
         } 
         else {
             targetCell.orbs += 1;
-            pointsEarned = 1; 
-        }
-        if (currentPlayer==='Red') {
-            redScore+=pointsEarned;
-            document.getElementById('red-score').innerText=redScore;
-        } 
-        else {
-            blueScore+=pointsEarned;
-            document.getElementById('blue-score').innerText=blueScore;
         }
 
         targetCell.owner=currentPlayer;
@@ -252,6 +238,7 @@ function updateTurnUI()
     else {
         indicator.classList.add('blue-text');
     }
+    updateScores();
 }
 
 updateTurnUI();
@@ -282,7 +269,12 @@ function processExplosionQueue()
 
     if (gameState[r][c].orbs >= getCriticalMass(r, c)) {
         
+        // 1. Subtract the mass.
         gameState[r][c].orbs -= getCriticalMass(r, c);
+        
+        if (gameState[r][c].orbs === 0) {
+            gameState[r][c].owner = null;
+        }
 
         playSound(sound.pop);
 
@@ -292,28 +284,6 @@ function processExplosionQueue()
             let nc = neighbours[i][1];
             
             if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                let previousOwner = gameState[nr][nc].owner;
-                let previousOrbs = gameState[nr][nc].orbs; 
-                let pointsEarned = 0;
-
-                if (previousOwner === null) {
-                    pointsEarned = 1;
-                } 
-                else if (previousOwner !== currentPlayer) {
-                    pointsEarned = previousOrbs; 
-                }
-                else {
-                    pointsEarned = 0; 
-                }
-
-                if (currentPlayer === 'Red') {
-                    redScore += pointsEarned;
-                    document.getElementById('red-score').innerText = redScore;
-                } 
-                else {
-                    blueScore += pointsEarned;
-                    document.getElementById('blue-score').innerText = blueScore;
-                }
                 
                 gameState[nr][nc].orbs += 1;
                 gameState[nr][nc].owner = currentPlayer;
@@ -353,6 +323,11 @@ function resetGame()
         return;
     }
 
+    explosionQueue = [];
+
+    isPaused = false;
+    document.getElementById('pause-button').innerText = 'Pause';
+
     for (let r1=0; r1<rows; r1++){
         for (let c1=0; c1<cols; c1++){
             gameState[r1][c1].orbs=0;
@@ -388,6 +363,26 @@ function playSound(audioNode) {
     clone.volume = 0.6; 
     clone.play().catch(e => {
     });
+}
+
+function updateScores() {
+    let rScore = 0;
+    let bScore = 0;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (gameState[r][c].owner === 'Red') {
+                rScore += gameState[r][c].orbs;
+            } else if (gameState[r][c].owner === 'Blue') {
+                bScore += gameState[r][c].orbs;
+            }
+        }
+    }
+
+    redScore = rScore;
+    blueScore = bScore;
+    document.getElementById('red-score').innerText = redScore;
+    document.getElementById('blue-score').innerText = blueScore;
 }
 
 document.getElementById('restart-button').addEventListener('click', resetGame);
