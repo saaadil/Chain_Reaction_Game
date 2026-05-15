@@ -1,10 +1,8 @@
-const config={
-    MAX_GAME_TIME: 300,
-    TURN_TIME: 15,
-    ANIM_DELAY: 250,
-    ROWS: 12,
-    COLS: 6
-};
+const MAX_GAME_TIME = 300;
+const TURN_TIME = 15;
+const ANIM_DELAY = 250;
+const ROWS = 12;
+const COLS = 6;
 
 const sound = {
     click: new Audio('click.mp3'),   
@@ -12,8 +10,8 @@ const sound = {
     error: new Audio('error.mp3')    
 };
 
-const rows=config.ROWS;
-const cols=config.COLS;
+const rows=ROWS;
+const cols=COLS;
 let redScore=0;
 let blueScore=0;
 let turnCount=0;
@@ -22,19 +20,23 @@ let masterClockInterval=null;
 let isOver=false;
 let isPaused=false;
 let isAnimating=false;
-let totalTime=config.MAX_GAME_TIME;
+let totalTime=MAX_GAME_TIME;
 let explosionQueue=[];
 let currentPlayer='Red';
 
 const boardContainer=document.getElementById('board-container');
 const pauseButton=document.getElementById('pause-button');
 
-boardContainer.style.gridTemplateColumns = `repeat(${config.COLS}, 1fr)`;
-boardContainer.style.gridTemplateRows = `repeat(${config.ROWS}, 1fr)`;
+boardContainer.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+boardContainer.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
 
-let gameState = Array.from({ length: rows }, () => 
-    Array.from({ length: cols }, () => ({ orbs: 0, owner: null })));
-
+let gameState = [];
+for (let i = 0; i < rows; i++) {
+    gameState[i] = [];
+    for (let j = 0; j < cols; j++) {
+        gameState[i][j] = { orbs: 0, owner: null };
+    }
+}
 for (let i=0; i<rows*cols; i++)
 {
     const newCell=document.createElement('div');
@@ -60,9 +62,13 @@ for (let i=0; i<rows*cols; i++)
             playSound(sound.error);
             return;
         }
+        if (turnCount < 2 && targetCell.orbs !== 0) {
+            playSound(sound.error);
+            return;
+        }
 
         playSound(sound.click);
-        if (turnCount < 2) {
+        if (turnCount < 2 && targetCell.orbs === 0) {
             let grantedOrbs = getCriticalMass(clickedRow, clickedCol) - 1;
             targetCell.orbs = grantedOrbs;
         } 
@@ -96,7 +102,7 @@ function getCriticalMass(r,c)
     {
         return 2;
     }
-    else if ((r===0) || (c==0) || (r===rows-1) || (c===cols-1))
+    else if ((r===0) || (c===0) || (r===rows-1) || (c===cols-1))
     {
         return 3;
     }
@@ -163,7 +169,7 @@ function checkWinCondition()
 function startTurnTimer()
 {
     clearInterval(turnTimerInterval);
-    let turnTime=config.TURN_TIME;
+    let turnTime=TURN_TIME;
     document.getElementById('turn-time').innerText=turnTime;
 
     turnTimerInterval=setInterval(() => {
@@ -252,7 +258,6 @@ function processExplosionQueue()
     if (explosionQueue.length === 0){
         isAnimating = false;
 
-        let previousPlayer = currentPlayer;
         currentPlayer = (currentPlayer === 'Red') ? 'Blue' : 'Red';
 
         updateTurnUI();
@@ -269,7 +274,6 @@ function processExplosionQueue()
 
     if (gameState[r][c].orbs >= getCriticalMass(r, c)) {
         
-        // 1. Subtract the mass.
         gameState[r][c].orbs -= getCriticalMass(r, c);
         
         if (gameState[r][c].orbs === 0) {
@@ -289,8 +293,14 @@ function processExplosionQueue()
                 gameState[nr][nc].owner = currentPlayer;
 
                 if (gameState[nr][nc].orbs >= getCriticalMass(nr, nc)) {
-                    let alreadyInQueue = explosionQueue.some(e => e.r === nr && e.c === nc);
-                    if (!alreadyInQueue) {
+                    let inQueue = false;
+                    for (let k = 0; k < explosionQueue.length; k++) {
+                        if (explosionQueue[k].r === nr && explosionQueue[k].c === nc) {
+                            inQueue = true;
+                            break;
+                        }
+                    }
+                    if (!inQueue) {
                         explosionQueue.push({r: nr, c: nc});
                     }
                 }
@@ -299,7 +309,7 @@ function processExplosionQueue()
     }
     updateBoardUI();
 
-    setTimeout(processExplosionQueue, config.ANIM_DELAY);
+    setTimeout(processExplosionQueue, ANIM_DELAY);
 }
 
 function gameOver(winner)
@@ -343,10 +353,11 @@ function resetGame()
     turnCount=0;
 
     document.getElementById('turn-indicator').className="red-text";
+    document.getElementById('turn-indicator').style.color = "";
     document.getElementById('turn-indicator').innerHTML="Red's turn";
 
     clearInterval(masterClockInterval)
-    totalTime=config.MAX_GAME_TIME;
+    totalTime=MAX_GAME_TIME;
     document.getElementById('total-time').innerText=totalTime;
     startMasterClock();
     startTurnTimer();
@@ -357,12 +368,11 @@ function resetGame()
     document.getElementById('blue-score').innerText = blueScore;
 }
 
-function playSound(audioNode) {
-    if (!audioNode) return;
-    let clone = audioNode.cloneNode(true);
+function playSound(audio) {
+    if (!audio) return;
+    let clone = audio.cloneNode(true);
     clone.volume = 0.6; 
-    clone.play().catch(e => {
-    });
+    clone.play().catch(e => {});
 }
 
 function updateScores() {
